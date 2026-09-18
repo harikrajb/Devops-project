@@ -1,0 +1,38 @@
+---
+- name: Build and Deploy Flask Application
+  hosts: localhost
+  connection: local
+  become: false
+
+  tasks:
+
+    - name: Build Docker image
+      community.docker.docker_image:
+        name: azure-devops-app
+        tag: v1
+        source: build
+        build:
+          path: /home/azureuser/ansible/app
+
+    - name: Remove existing application container
+      community.docker.docker_container:
+        name: azure-app
+        state: absent
+
+    - name: Start Flask application container
+      community.docker.docker_container:
+        name: azure-app
+        image: azure-devops-app:v1
+        state: started
+        restart_policy: unless-stopped
+        published_ports:
+          - "8080:5000"
+
+    - name: Verify application container
+      community.docker.docker_container_info:
+        name: azure-app
+      register: app_container
+
+    - name: Display container status
+      ansible.builtin.debug:
+        msg: "Container running: {{ app_container.container.State.Running }}"

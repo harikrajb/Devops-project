@@ -1,0 +1,21 @@
+---
+- name: Deploy NGINX Docker Container
+  hosts: localhost
+  connection: local
+  become: false
+
+  tasks:
+
+    - name: Pull NGINX image
+      community.docker.docker_image:
+        name: nginx
+        source: pull
+
+    - name: Create and start NGINX container
+      community.docker.docker_container:
+        name: web01
+        image: nginx
+        state: started
+        restart_policy: unless-stopped
+        published_ports:
+          - "8080:80"
